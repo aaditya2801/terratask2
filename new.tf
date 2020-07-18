@@ -45,6 +45,13 @@ depends_on = [
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    description = "efs mount"
+    from_port   = 2049
+    to_port     = 2049
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   } 
 
   egress {
@@ -169,10 +176,9 @@ depends_on = [
 
 provisioner "remote-exec" {
     inline = [
-      "sudo mount aws_efs_file_system.efs.id /var/www/html",
-      "sudo git clone https://github.com/aaditya2801/terraformjob1.git /fold1",
-      "sudo cp -rf /fold1/* /var/www/html",
-      "sudo rm -rf /fold1",
+      "sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport ${aws_efs_file_system.myefsvol.dns_name}:/ /var/www/html",
+      "sudo su -c \"echo '${aws_efs_file_system.myefsvol.dns_name}:/ /var/www/html nfs4 defaults,vers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 0 0' >> /etc/fstab\",",
+      "sudo git clone https://github.com/aaditya2801/terraformjob1.git /var/www/html",
     ]
   }
 }
